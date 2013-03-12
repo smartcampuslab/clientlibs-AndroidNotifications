@@ -210,15 +210,16 @@ public class NotificationsHelper {
 	}
 
 	public static void toggleRead(Notification content) throws DataException, StorageConfigurationException {
-		content.setRead(!content.isRead());
+		content.setReaded(!content.isReaded());
 		getInstance().storage.update(content, false);
 	}
 
 	public static void markAllAsRead(NotificationFilter filter) throws DataException, StorageConfigurationException {
 		filter.setReaded(false);
 		List<BatchModel> list = new ArrayList<BatchModel>();
-		for (Notification n : getNotifications(filter, 0, -1, 0)) {
-			n.setRead(true);
+		List<Notification> nList = getNotifications(filter, 0, -1, 0);
+		for (Notification n : nList) {
+			n.setReaded(true);
 			list.add(new SyncUpdateModel.UpdateModel(n, false, true));
 		}
 		getInstance().storage.batch(list);

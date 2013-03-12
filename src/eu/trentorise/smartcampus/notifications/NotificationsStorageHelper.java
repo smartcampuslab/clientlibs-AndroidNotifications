@@ -38,7 +38,7 @@ public class NotificationsStorageHelper implements BeanStorageHelper<Notificatio
 		n.setDescription(cursor.getString(cursor.getColumnIndex("description")));
 		n.setEntities(Utils.convertJSONToObjects(cursor.getString(cursor.getColumnIndex("entities")), EntityObject.class));
 		n.setChannelIds(Utils.convertJSONToObjects(cursor.getString(cursor.getColumnIndex("channelIds")), String.class));
-		n.setRead(cursor.getInt(cursor.getColumnIndex("read")) > 0);
+		n.setReaded(cursor.getInt(cursor.getColumnIndex("readed")) > 0);
 		n.setStarred(cursor.getInt(cursor.getColumnIndex("starred")) > 0);
 		n.setTimestamp(cursor.getLong(cursor.getColumnIndex("timestamp")));
 		n.setTitle(cursor.getString(cursor.getColumnIndex("title")));
@@ -68,7 +68,7 @@ public class NotificationsStorageHelper implements BeanStorageHelper<Notificatio
 		values.put("description", bean.getDescription());
 		values.put("timestamp", bean.getTimestamp());
 		values.put("starred", bean.isStarred() ? 1 : 0);
-		values.put("read", bean.isRead() ? 1 : 0);
+		values.put("readed", bean.isReaded() ? 1 : 0);
 
 		return values;
 	}
@@ -86,7 +86,7 @@ public class NotificationsStorageHelper implements BeanStorageHelper<Notificatio
 		defs.put("channelIds", "TEXT");
 		defs.put("timestamp", "INTEGER");
 		defs.put("starred", "INTEGER");
-		defs.put("read", "INTEGER");
+		defs.put("readed", "INTEGER");
 		return defs;
 	}
 

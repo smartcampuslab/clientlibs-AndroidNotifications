@@ -36,7 +36,7 @@ public class Notification extends BasicObject {
 
 	private NotificationAuthor author;
 
-	private boolean read;
+	private boolean readed;
 
 	private boolean markedDeleted;
 
@@ -108,12 +108,12 @@ public class Notification extends BasicObject {
 		this.channelIds = channelIds;
 	}
 
-	public boolean isRead() {
-		return read;
+	public boolean isReaded() {
+		return readed;
 	}
 
-	public void setRead(boolean read) {
-		this.read = read;
+	public void setReaded(boolean readed) {
+		this.readed = readed;
 	}
 
 	public List<String> getLabelIds() {
