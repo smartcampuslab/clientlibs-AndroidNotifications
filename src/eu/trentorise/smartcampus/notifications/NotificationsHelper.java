@@ -193,9 +193,8 @@ public class NotificationsHelper {
 			query += (query.length() > 0 ? " AND " : "") + "starred = 0";
 		}
 
-		if (filter.getSource() != null && filter.getSource().length() != 0) {
+		if (filter.getSource() != null) {
 			query += (query.length() > 0 ? " AND " : "") + "type LIKE '%\"" + filter.getSource() + "\"%'";
-			params.add(filter.getSearchText());
 		}
 
 		if (filter.getChannelId() != null) {
