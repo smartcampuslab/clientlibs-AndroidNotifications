@@ -178,7 +178,7 @@ public class NotificationsHelper {
 			return Collections.emptyList();
 		}
 	}
-	
+
 	private static String createQuery(NotificationFilter filter, long since, List<String> params) {
 		String query = "";
 		if (filter.isReaded() != null && filter.isReaded()) {
@@ -186,14 +186,22 @@ public class NotificationsHelper {
 		} else if (filter.isReaded() != null && !filter.isReaded()) {
 			query += "readed = 0";
 		}
+
 		if (filter.isStarred() != null && filter.isStarred()) {
 			query += (query.length() > 0 ? " AND " : "") + "starred > 0";
 		} else if (filter.isStarred() != null && !filter.isStarred()) {
 			query += (query.length() > 0 ? " AND " : "") + "starred = 0";
 		}
+
+		if (filter.getSource() != null && filter.getSource().length() != 0) {
+			query += (query.length() > 0 ? " AND " : "") + "type LIKE '%\"" + filter.getSource() + "\"%'";
+			params.add(filter.getSearchText());
+		}
+
 		if (filter.getChannelId() != null) {
 			query += (query.length() > 0 ? " AND " : "") + "channelIds LIKE '%\"" + filter.getChannelId() + "\"%'";
 		}
+
 		if (filter.getSearchText() != null && filter.getSearchText().length() != 0) {
 			query += (query.length() > 0 ? " AND " : "") + "(notifications MATCH ?)";
 			params.add(filter.getSearchText());
