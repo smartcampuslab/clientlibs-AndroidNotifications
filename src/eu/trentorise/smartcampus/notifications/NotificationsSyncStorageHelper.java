@@ -62,13 +62,13 @@ public class NotificationsSyncStorageHelper extends SyncStorageHelperWithPaging 
 			StorageConfigurationException {
 		SyncData data = super.synchronize(ctx, mProtocolCarrier, authToken, appToken, host, service);
 		// Collection<Preference> prefs = getObjects(Preference.class);
-		// int max = Constants.MAX_MESSAGE_NUM;
+		int max = 50;
 		// if (prefs != null && !prefs.isEmpty()) {
 		// Preference userPrefs = prefs.iterator().next();
 		// Integer userMax = userPrefs.getMaxMessageNumber();
 		// if (userMax != null && userMax > 0) max = Math.min(userMax, max);
 		// }
-		// removeOld(max);
+		removeOld(max);
 		return data;
 	}
 
