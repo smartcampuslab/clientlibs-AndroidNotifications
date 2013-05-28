@@ -48,6 +48,11 @@ import eu.trentorise.smartcampus.storage.sync.SyncUpdateModel;
 
 public class NotificationsHelper {
 
+	public static final String PARAM_APP_TOKEN = "app_token";
+	public static final String PARAM_SYNC_DB_NAME = "sync_db_name";
+	public static final String PARAM_SYNC_SERVICE = "sync_service";
+	public static final String PARAM_AUTHORITY = "authority";
+	
 	private static String APP_TOKEN = null;
 	private static String SYNC_DB_NAME = null;
 	private static String SYNC_SERVICE = null;
@@ -74,6 +79,10 @@ public class NotificationsHelper {
 		}
 	}
 
+	public static boolean isInstantiated() {
+		return (instance != null);
+	}
+	
 	public static String getAuthToken() {
 		String token = accessProvider.readToken(instance.mContext, null);
 		return token;
