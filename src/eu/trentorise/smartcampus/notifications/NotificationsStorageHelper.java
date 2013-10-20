@@ -22,33 +22,35 @@ import java.util.Map;
 import android.content.ContentValues;
 import android.database.Cursor;
 import eu.trentorise.smartcampus.android.common.Utils;
+import eu.trentorise.smartcampus.communicator.model.DBNotification;
 import eu.trentorise.smartcampus.communicator.model.EntityObject;
 import eu.trentorise.smartcampus.communicator.model.Notification;
 import eu.trentorise.smartcampus.storage.db.BeanStorageHelper;
 
-public class NotificationsStorageHelper implements BeanStorageHelper<Notification> {
+public class NotificationsStorageHelper implements BeanStorageHelper<DBNotification> {
 
 	@SuppressWarnings("unchecked")
 	@Override
-	public Notification toBean(Cursor cursor) {
-		Notification n = new Notification();
-		n.setId(cursor.getString(cursor.getColumnIndex("id")));
-		n.setLabelIds(Utils.convertJSONToObjects(cursor.getString(cursor.getColumnIndex("labelIds")), String.class));
-		n.setContent(Utils.convertJSONToObject(cursor.getString(cursor.getColumnIndex("content")), Map.class));
-		n.setDescription(cursor.getString(cursor.getColumnIndex("description")));
-		n.setEntities(Utils.convertJSONToObjects(cursor.getString(cursor.getColumnIndex("entities")), EntityObject.class));
-		n.setChannelIds(Utils.convertJSONToObjects(cursor.getString(cursor.getColumnIndex("channelIds")), String.class));
-		n.setReaded(cursor.getInt(cursor.getColumnIndex("readed")) > 0);
-		n.setStarred(cursor.getInt(cursor.getColumnIndex("starred")) > 0);
-		n.setTimestamp(cursor.getLong(cursor.getColumnIndex("timestamp")));
-		n.setTitle(cursor.getString(cursor.getColumnIndex("title")));
-		n.setType(cursor.getString(cursor.getColumnIndex("type")));
+	public DBNotification toBean(Cursor cursor) {
+		DBNotification dbn = new DBNotification();
+		dbn.setId(cursor.getString(cursor.getColumnIndex("id")));
+		dbn.getNotification().setLabelIds(Utils.convertJSONToObjects(cursor.getString(cursor.getColumnIndex("labelIds")), String.class));
+		dbn.getNotification().setContent(Utils.convertJSONToObject(cursor.getString(cursor.getColumnIndex("content")), Map.class));
+		dbn.getNotification().setDescription(cursor.getString(cursor.getColumnIndex("description")));
+		dbn.getNotification().setEntities(Utils.convertJSONToObjects(cursor.getString(cursor.getColumnIndex("entities")), EntityObject.class));
+		dbn.getNotification().setChannelIds(Utils.convertJSONToObjects(cursor.getString(cursor.getColumnIndex("channelIds")), String.class));
+		dbn.getNotification().setReaded(cursor.getInt(cursor.getColumnIndex("readed")) > 0);
+		dbn.getNotification().setStarred(cursor.getInt(cursor.getColumnIndex("starred")) > 0);
+		dbn.getNotification().setTimestamp(cursor.getLong(cursor.getColumnIndex("timestamp")));
+		dbn.getNotification().setTitle(cursor.getString(cursor.getColumnIndex("title")));
+		dbn.getNotification().setType(cursor.getString(cursor.getColumnIndex("type")));
 
-		return n;
+		return dbn;
 	}
 
 	@Override
-	public ContentValues toContent(Notification bean) {
+	public ContentValues toContent(DBNotification dbBean) {
+		Notification bean = dbBean.getNotification();
 		ContentValues values = new ContentValues();
 
 		if (bean.getLabelIds() == null)
