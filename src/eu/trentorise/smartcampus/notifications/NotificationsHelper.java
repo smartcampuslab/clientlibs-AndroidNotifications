@@ -24,16 +24,17 @@ import android.accounts.Account;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.os.RemoteException;
 import android.widget.Toast;
+import eu.trentorise.smartcampus.ac.AACException;
+import eu.trentorise.smartcampus.ac.Constants;
 import eu.trentorise.smartcampus.ac.SCAccessProvider;
-import eu.trentorise.smartcampus.ac.authenticator.AMSCAccessProvider;
-import eu.trentorise.smartcampus.android.common.GlobalConfig;
+import eu.trentorise.smartcampus.communicator.model.DBNotification;
 import eu.trentorise.smartcampus.communicator.model.Notification;
 import eu.trentorise.smartcampus.communicator.model.NotificationFilter;
-import eu.trentorise.smartcampus.communicator.model.Preference;
+import eu.trentorise.smartcampus.communicator.model.NotificationsConstants;
 import eu.trentorise.smartcampus.communicator.model.NotificationsConstants.ORDERING;
 import eu.trentorise.smartcampus.protocolcarrier.exceptions.ConnectionException;
 import eu.trentorise.smartcampus.protocolcarrier.exceptions.ProtocolException;
@@ -43,6 +44,7 @@ import eu.trentorise.smartcampus.storage.BatchModel.DeleteModel;
 import eu.trentorise.smartcampus.storage.DataException;
 import eu.trentorise.smartcampus.storage.StorageConfigurationException;
 import eu.trentorise.smartcampus.storage.db.StorageConfiguration;
+import eu.trentorise.smartcampus.storage.sync.ISynchronizer;
 import eu.trentorise.smartcampus.storage.sync.SyncStorage;
 import eu.trentorise.smartcampus.storage.sync.SyncUpdateModel;
 
@@ -55,18 +57,17 @@ public class NotificationsHelper {
 	
 	private static String APP_TOKEN = null;
 	private static String SYNC_DB_NAME = null;
-	private static String SYNC_SERVICE = null;
 	private static String AUTHORITY = null;
+	private static String SYNC_SERVICE = null;
 
 	private static NotificationsHelper instance = null;
-
-	private static SCAccessProvider accessProvider = new AMSCAccessProvider();
 
 	private Context mContext;
 	private StorageConfiguration sc = null;
 	private NotificationsSyncStorage storage = null;
 
 	private boolean loaded = false;
+	private ISynchronizer synchronizer = null;
 
 	public static void init(Context mContext, String appToken, String syncDbName, String syncService, String authority) {
 		APP_TOKEN = appToken;
@@ -83,8 +84,8 @@ public class NotificationsHelper {
 		return (instance != null);
 	}
 	
-	public static String getAuthToken() {
-		String token = accessProvider.readToken(instance.mContext, null);
+	public static String getAuthToken() throws AACException {
+		String token = SCAccessProvider.getInstance(instance.mContext).readToken(instance.mContext);
 		return token;
 	}
 
@@ -110,43 +111,35 @@ public class NotificationsHelper {
 		this.storage = new NotificationsSyncStorage(mContext, APP_TOKEN, SYNC_DB_NAME, 2, sc);
 	}
 
-	public static void start(boolean local) throws RemoteException, DataException, StorageConfigurationException,
-			ConnectionException, ProtocolException, SecurityException {
+	public static void start(boolean local) throws NameNotFoundException, DataException, StorageConfigurationException, SecurityException, ConnectionException, ProtocolException {
 		if (!local) {
 			getInstance().loadData();
 		}
 
 		if (!getInstance().loaded) {
-			ContentResolver.setSyncAutomatically(
-					new Account(eu.trentorise.smartcampus.ac.Constants.getAccountName(getInstance().mContext),
-							eu.trentorise.smartcampus.ac.Constants.getAccountType(getInstance().mContext)), AUTHORITY, true);
+			Account a = new Account(Constants.getAccountName(getInstance().mContext),Constants.getAccountType(getInstance().mContext));
+			ContentResolver.setSyncAutomatically(a, AUTHORITY, true);
 
-			ContentResolver.addPeriodicSync(
-					new Account(eu.trentorise.smartcampus.ac.Constants.getAccountName(getInstance().mContext),
-							eu.trentorise.smartcampus.ac.Constants.getAccountType(getInstance().mContext)), AUTHORITY,
-					new Bundle(), Preference.DEF_SYNC_PERIOD * 60);
+			ContentResolver.addPeriodicSync(a, AUTHORITY, new Bundle(), NotificationsConstants.DEF_SYNC_PERIOD * 60);
 		}
 	}
 
-	private void loadData() throws DataException, StorageConfigurationException, ConnectionException, ProtocolException,
-			SecurityException, RemoteException {
+	private void loadData() throws StorageConfigurationException, DataException, SecurityException, ConnectionException, ProtocolException {
 		if (loaded) {
 			return;
 		}
-
-		Collection<Preference> coll = storage.getObjects(Preference.class);
-		if (coll == null || coll.isEmpty()) {
-			storage.synchronize(getAuthToken(), GlobalConfig.getAppUrl(getInstance().mContext), SYNC_SERVICE);
-			coll = storage.getObjects(Preference.class);
-		}
-
+		getInstance().storage.synchronize(getInstance().synchronizer);
 		loaded = true;
 	}
+	
+	public static void synchronize() throws StorageConfigurationException, DataException, SecurityException, ConnectionException, ProtocolException {
+		getInstance().storage.synchronize(getInstance().synchronizer);
+	}
+	
 
-	public static void synchronizeInBG() throws RemoteException, DataException, StorageConfigurationException,
-			SecurityException, ConnectionException, ProtocolException {
-		ContentResolver.requestSync(new Account(eu.trentorise.smartcampus.ac.Constants.getAccountName(getInstance().mContext),
-				eu.trentorise.smartcampus.ac.Constants.getAccountType(getInstance().mContext)), AUTHORITY, new Bundle());
+	public static void synchronizeInBG() throws NameNotFoundException, DataException {
+		Account a = new Account(Constants.getAccountName(getInstance().mContext),Constants.getAccountType(getInstance().mContext));
+		ContentResolver.requestSync(a, AUTHORITY, new Bundle());
 	}
 
 	public static void destroy() throws DataException {
@@ -167,22 +160,24 @@ public class NotificationsHelper {
 			List<String> params = new ArrayList<String>();
 			String query = createQuery(filter, since, params);
 
-			Collection<Notification> collection = null;
+			Collection<DBNotification> collection = null;
 			if (filter.getOrdering() == null || filter.getOrdering().equals(ORDERING.ORDER_BY_ARRIVAL)) {
-				collection = getInstance().storage.query(Notification.class, query, params.toArray(new String[params.size()]),
+				collection = getInstance().storage.query(DBNotification.class, query, params.toArray(new String[params.size()]),
 						position, size, "timestamp DESC");
 			} else if (filter.getOrdering().equals(ORDERING.ORDER_BY_TITLE)) {
-				collection = getInstance().storage.query(Notification.class, query, params.toArray(new String[params.size()]),
+				collection = getInstance().storage.query(DBNotification.class, query, params.toArray(new String[params.size()]),
 						position, size, "title ASC");
 			} else {
 				// TODO: sort!
-				collection = getInstance().storage.query(Notification.class, query, params.toArray(new String[params.size()]),
+				collection = getInstance().storage.query(DBNotification.class, query, params.toArray(new String[params.size()]),
 						position, size);
 			}
 
-			if (collection.size() > 0)
-				return new ArrayList<Notification>(collection);
-			return Collections.emptyList();
+			List<Notification> res = new ArrayList<Notification>();
+			if (collection != null) {
+				for (DBNotification dbn : collection) res.add(dbn.getNotification());
+			}
+			return res;
 		} catch (Exception e) {
 			return Collections.emptyList();
 		}
@@ -222,12 +217,12 @@ public class NotificationsHelper {
 	}
 
 	public static void removeNotification(Notification content) throws DataException, StorageConfigurationException {
-		getInstance().storage.delete(content.getId(), Notification.class);
+		getInstance().storage.delete(content.getId(), DBNotification.class);
 	}
 
 	public static void toggleRead(Notification content) throws DataException, StorageConfigurationException {
 		content.setReaded(!content.isReaded());
-		getInstance().storage.update(content, false);
+		getInstance().storage.update(new DBNotification(content), false);
 	}
 
 	public static void markAllAsRead(NotificationFilter filter) throws DataException, StorageConfigurationException {
@@ -236,7 +231,7 @@ public class NotificationsHelper {
 		List<Notification> nList = getNotifications(filter, 0, -1, 0);
 		for (Notification n : nList) {
 			n.setReaded(true);
-			list.add(new SyncUpdateModel.UpdateModel(n, false, true));
+			list.add(new SyncUpdateModel.UpdateModel(new DBNotification(n), false, true));
 		}
 		getInstance().storage.batch(list);
 	}
@@ -256,7 +251,7 @@ public class NotificationsHelper {
 		if (c != null) {
 			c.moveToFirst();
 			for (int i = 0; i < c.getCount(); i++) {
-				list.add(new DeleteModel(c.getString(0), Notification.class));
+				list.add(new DeleteModel(c.getString(0), DBNotification.class));
 				c.moveToNext();
 			}
 		}

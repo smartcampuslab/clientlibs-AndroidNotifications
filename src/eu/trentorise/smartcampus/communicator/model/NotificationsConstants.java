@@ -11,4 +11,6 @@ public class NotificationsConstants {
 			this.text = text;
 		}
 	}
+
+	public static final int DEF_SYNC_PERIOD = 5;
 }
