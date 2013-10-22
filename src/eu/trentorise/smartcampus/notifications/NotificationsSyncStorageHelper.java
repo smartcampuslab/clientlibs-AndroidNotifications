@@ -30,8 +30,11 @@ import eu.trentorise.smartcampus.storage.sync.SyncStorageHelperWithPaging;
 
 public class NotificationsSyncStorageHelper extends SyncStorageHelperWithPaging {
 
-	public NotificationsSyncStorageHelper(Context context, String dbName, int version, StorageConfiguration config) {
+	protected int maxMessages = 50;
+	
+	public NotificationsSyncStorageHelper(Context context, String dbName, int version, StorageConfiguration config, int maxMessages) {
 		super(context, dbName, version, config);
+		this.maxMessages = maxMessages;
 	}
 
 	protected void removeOld(int num) {
@@ -61,14 +64,7 @@ public class NotificationsSyncStorageHelper extends SyncStorageHelperWithPaging 
 			String service) throws SecurityException, ConnectionException, DataException, ProtocolException,
 			StorageConfigurationException {
 		SyncData data = super.synchronize(ctx, mProtocolCarrier, authToken, appToken, host, service);
-		// Collection<Preference> prefs = getObjects(Preference.class);
-		int max = 50;
-		// if (prefs != null && !prefs.isEmpty()) {
-		// Preference userPrefs = prefs.iterator().next();
-		// Integer userMax = userPrefs.getMaxMessageNumber();
-		// if (userMax != null && userMax > 0) max = Math.min(userMax, max);
-		// }
-		removeOld(max);
+		removeOld(maxMessages);
 		return data;
 	}
 

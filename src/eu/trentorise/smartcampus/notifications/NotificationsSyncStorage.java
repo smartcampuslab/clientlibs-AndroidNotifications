@@ -22,13 +22,16 @@ import eu.trentorise.smartcampus.storage.sync.SyncStorageWithPaging;
 
 public class NotificationsSyncStorage extends SyncStorageWithPaging {
 
-	public NotificationsSyncStorage(Context context, String appToken, String dbName, int dbVersion, StorageConfiguration config) {
+	private int maxMessages = 50;
+	
+	public NotificationsSyncStorage(Context context, String appToken, String dbName, int dbVersion, StorageConfiguration config, int maxMessages) {
 		super(context, appToken, dbName, dbVersion, config);
+		if (maxMessages > 0) this.maxMessages = maxMessages;
 	}
 
 	@Override
 	protected SyncStorageHelper createHelper(Context context, String dbName, int dbVersion, StorageConfiguration config) {
-		return new NotificationsSyncStorageHelper(context, dbName, dbVersion, config);
+		return new NotificationsSyncStorageHelper(context, dbName, dbVersion, config, maxMessages);
 	}
 
 
