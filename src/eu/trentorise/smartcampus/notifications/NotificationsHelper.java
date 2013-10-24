@@ -58,12 +58,12 @@ public class NotificationsHelper {
 	public static final String PARAM_SYNC_SERVICE = "sync_service";
 	public static final String PARAM_AUTHORITY = "authority";
 	
-	private String APP_TOKEN = null;
-	private String SYNC_DB_NAME = null;
-	private String AUTHORITY = null;
-	private String SYNC_SERVICE = null;
-	private String APP_ID = null; 
-	private int maxMessages = 0;
+	private static String APP_TOKEN = null;
+	private static String SYNC_DB_NAME = null;
+	private static String AUTHORITY = null;
+	private static String SYNC_SERVICE = null;
+	private static String APP_ID = null; 
+	private static int maxMessages = 0;
 
 	private CommunicatorConnector connector = null;
 	
@@ -78,13 +78,13 @@ public class NotificationsHelper {
 
 	public static void init(Context mContext, String appToken, String syncDbName, String syncService, String authority, String appId, int maxMessages) throws Exception {
 		if (instance == null) {
+			APP_TOKEN = appToken;
+			SYNC_DB_NAME = syncDbName;
+			SYNC_SERVICE = syncService;
+			AUTHORITY = authority;
+			APP_ID = appId;
+			NotificationsHelper.maxMessages = maxMessages;
 			instance = new NotificationsHelper(mContext);
-			instance.APP_TOKEN = appToken;
-			instance.SYNC_DB_NAME = syncDbName;
-			instance.SYNC_SERVICE = syncService;
-			instance.AUTHORITY = authority;
-			instance.APP_ID = appId;
-			instance.maxMessages = maxMessages;
 		}
 	}
 
@@ -124,9 +124,11 @@ public class NotificationsHelper {
 
 		if (!getInstance().loaded) {
 			Account a = new Account(Constants.getAccountName(getInstance().mContext),Constants.getAccountType(getInstance().mContext));
-			ContentResolver.setSyncAutomatically(a, getInstance().AUTHORITY, true);
+			getInstance();
+			ContentResolver.setSyncAutomatically(a, NotificationsHelper.AUTHORITY, true);
 
-			ContentResolver.addPeriodicSync(a, getInstance().AUTHORITY, new Bundle(), NotificationsConstants.DEF_SYNC_PERIOD * 60);
+			getInstance();
+			ContentResolver.addPeriodicSync(a, NotificationsHelper.AUTHORITY, new Bundle(), NotificationsConstants.DEF_SYNC_PERIOD * 60);
 		}
 	}
 
@@ -138,14 +140,15 @@ public class NotificationsHelper {
 		loaded = true;
 	}
 	
-	public static void synchronize() throws StorageConfigurationException, DataException, SecurityException, ConnectionException, ProtocolException {
-		getInstance().storage.synchronize(getInstance().synchronizer);
+	public static SyncData synchronize() throws StorageConfigurationException, DataException, SecurityException, ConnectionException, ProtocolException {
+		return getInstance().storage.synchronize(getInstance().synchronizer);
 	}
 	
-
+	
 	public static void synchronizeInBG() throws NameNotFoundException, DataException {
 		Account a = new Account(Constants.getAccountName(getInstance().mContext),Constants.getAccountType(getInstance().mContext));
-		ContentResolver.requestSync(a, getInstance().AUTHORITY, new Bundle());
+		getInstance();
+		ContentResolver.requestSync(a, NotificationsHelper.AUTHORITY, new Bundle());
 	}
 
 	public static void destroy() throws DataException {
