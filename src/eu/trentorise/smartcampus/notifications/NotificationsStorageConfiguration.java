@@ -36,7 +36,7 @@ public class NotificationsStorageConfiguration implements StorageConfiguration {
 
 	@Override
 	public String getTableName(Class<? extends BasicObject> cls) throws StorageConfigurationException {
-		if (cls.equals(Notification.class)) {
+		if (cls.equals(DBNotification.class)) {
 			return "notifications";
 		}
 		return null;
@@ -45,7 +45,7 @@ public class NotificationsStorageConfiguration implements StorageConfiguration {
 	@SuppressWarnings("unchecked")
 	@Override
 	public <T extends BasicObject> BeanStorageHelper<T> getStorageHelper(Class<T> cls) throws StorageConfigurationException {
-		if (cls.equals(Notification.class)) {
+		if (cls.equals(DBNotification.class)) {
 			return (BeanStorageHelper<T>) notificationHelper;
 		}
 		return null;
