@@ -16,7 +16,6 @@
 package eu.trentorise.smartcampus.notifications;
 
 import eu.trentorise.smartcampus.communicator.model.DBNotification;
-import eu.trentorise.smartcampus.communicator.model.Notification;
 import eu.trentorise.smartcampus.storage.BasicObject;
 import eu.trentorise.smartcampus.storage.StorageConfigurationException;
 import eu.trentorise.smartcampus.storage.db.BeanStorageHelper;
@@ -26,7 +25,7 @@ public class NotificationsStorageConfiguration implements StorageConfiguration {
 	private static final long serialVersionUID = 906503482979452854L;
 
 	@SuppressWarnings("unchecked")
-	private static Class<? extends BasicObject>[] classes = (Class<? extends BasicObject>[]) new Class<?>[] {  Notification.class };
+	private static Class<? extends BasicObject>[] classes = (Class<? extends BasicObject>[]) new Class<?>[] {  DBNotification.class };
 	private static BeanStorageHelper<DBNotification> notificationHelper = new NotificationsStorageHelper();
 
 	@Override
