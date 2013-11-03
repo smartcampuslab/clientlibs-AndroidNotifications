@@ -32,6 +32,7 @@ import android.os.Bundle;
 import eu.trentorise.smartcampus.ac.AACException;
 import eu.trentorise.smartcampus.ac.Constants;
 import eu.trentorise.smartcampus.ac.SCAccessProvider;
+import eu.trentorise.smartcampus.android.common.GlobalConfig;
 import eu.trentorise.smartcampus.communicator.CommunicatorConnector;
 import eu.trentorise.smartcampus.communicator.CommunicatorConnectorException;
 import eu.trentorise.smartcampus.communicator.model.DBNotification;
@@ -39,6 +40,7 @@ import eu.trentorise.smartcampus.communicator.model.Notification;
 import eu.trentorise.smartcampus.communicator.model.NotificationFilter;
 import eu.trentorise.smartcampus.communicator.model.NotificationsConstants;
 import eu.trentorise.smartcampus.communicator.model.NotificationsConstants.ORDERING;
+import eu.trentorise.smartcampus.network.JsonUtils;
 import eu.trentorise.smartcampus.protocolcarrier.exceptions.ConnectionException;
 import eu.trentorise.smartcampus.protocolcarrier.exceptions.ProtocolException;
 import eu.trentorise.smartcampus.protocolcarrier.exceptions.SecurityException;
@@ -57,11 +59,11 @@ public class NotificationsHelper {
 	public static final String PARAM_SYNC_DB_NAME = "sync_db_name";
 	public static final String PARAM_SYNC_SERVICE = "sync_service";
 	public static final String PARAM_AUTHORITY = "authority";
+	private static final String SYNC_DB_NAME = "notifications";
+	private static final String SYNC_SERVICE = "core.communicator";
 	
 	private static String APP_TOKEN = null;
-	private static String SYNC_DB_NAME = null;
 	private static String AUTHORITY = null;
-	private static String SYNC_SERVICE = null;
 	private static String APP_ID = null; 
 	private static int maxMessages = 0;
 
@@ -76,11 +78,9 @@ public class NotificationsHelper {
 	private boolean loaded = false;
 	private ISynchronizer synchronizer = null;
 
-	public static void init(Context mContext, String appToken, String syncDbName, String syncService, String authority, String appId, int maxMessages) throws Exception {
+	public static void init(Context mContext, String appToken, String authority, String appId, int maxMessages) throws Exception {
 		if (instance == null) {
 			APP_TOKEN = appToken;
-			SYNC_DB_NAME = syncDbName;
-			SYNC_SERVICE = syncService;
 			AUTHORITY = authority;
 			APP_ID = appId;
 			NotificationsHelper.maxMessages = maxMessages;
@@ -113,7 +113,9 @@ public class NotificationsHelper {
 
 		this.sc = new NotificationsStorageConfiguration();
 		this.storage = new NotificationsSyncStorage(mContext, APP_TOKEN, SYNC_DB_NAME, 2, sc, maxMessages);
-		this.connector = new CommunicatorConnector(SYNC_SERVICE, APP_ID); 
+		String url = GlobalConfig.getAppUrl(mContext);
+		if (!url.endsWith("/")) url += "/";
+		this.connector = new CommunicatorConnector(url + SYNC_SERVICE, APP_ID); 
 		this.synchronizer = new NotificationSynchronizer();
 	}
 
@@ -122,13 +124,13 @@ public class NotificationsHelper {
 			getInstance().loadData();
 		}
 
-		if (!getInstance().loaded) {
+		if (!getInstance().loaded && AUTHORITY != null) {
 			Account a = new Account(Constants.getAccountName(getInstance().mContext),Constants.getAccountType(getInstance().mContext));
 			getInstance();
-			ContentResolver.setSyncAutomatically(a, NotificationsHelper.AUTHORITY, true);
+			ContentResolver.setSyncAutomatically(a, AUTHORITY, true);
 
 			getInstance();
-			ContentResolver.addPeriodicSync(a, NotificationsHelper.AUTHORITY, new Bundle(), NotificationsConstants.DEF_SYNC_PERIOD * 60);
+			ContentResolver.addPeriodicSync(a, AUTHORITY, new Bundle(), NotificationsConstants.DEF_SYNC_PERIOD * 60);
 		}
 	}
 
@@ -270,7 +272,8 @@ public class NotificationsHelper {
 			if (in.getUpdated() != null && in.getUpdated().containsKey(DBNotification.class.getName())) {
 				Set<Notification> set = new HashSet<Notification>();
 				for (Object dbn : in.getUpdated().get(DBNotification.class.getName())) {
-					set.add(((DBNotification)dbn).getNotification());
+					Notification n = JsonUtils.convert(dbn, Notification.class);
+					set.add(n);
 				}
 				data.setUpdated(set);
 			}
