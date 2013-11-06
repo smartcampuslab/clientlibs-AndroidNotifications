@@ -41,6 +41,8 @@ import eu.trentorise.smartcampus.communicator.model.NotificationFilter;
 import eu.trentorise.smartcampus.communicator.model.NotificationsConstants;
 import eu.trentorise.smartcampus.communicator.model.NotificationsConstants.ORDERING;
 import eu.trentorise.smartcampus.network.JsonUtils;
+import eu.trentorise.smartcampus.network.RemoteConnector;
+import eu.trentorise.smartcampus.network.RemoteConnector.CLIENT_TYPE;
 import eu.trentorise.smartcampus.protocolcarrier.exceptions.ConnectionException;
 import eu.trentorise.smartcampus.protocolcarrier.exceptions.ProtocolException;
 import eu.trentorise.smartcampus.protocolcarrier.exceptions.SecurityException;
@@ -85,6 +87,10 @@ public class NotificationsHelper {
 			APP_ID = appId;
 			NotificationsHelper.maxMessages = maxMessages;
 			instance = new NotificationsHelper(mContext);
+			if (android.os.Build.VERSION.SDK_INT <= android.os.Build.VERSION_CODES.FROYO) {
+				RemoteConnector.setClientType(CLIENT_TYPE.CLIENT_WILDCARD);
+			}
+
 		}
 	}
 
