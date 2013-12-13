@@ -278,7 +278,7 @@ public class NotificationsHelper {
 			if (in.getUpdated() != null && in.getUpdated().containsKey(DBNotification.class.getName())) {
 				Set<Notification> set = new HashSet<Notification>();
 				for (Object dbn : in.getUpdated().get(DBNotification.class.getName())) {
-					Notification n = JsonUtils.convert(dbn, Notification.class);
+					Notification n = JsonUtils.convert(dbn, DBNotification.class).getNotification();
 					set.add(n);
 				}
 				data.setUpdated(set);
