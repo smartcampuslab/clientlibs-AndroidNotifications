@@ -132,10 +132,7 @@ public class NotificationsHelper {
 
 		if (!getInstance().loaded && AUTHORITY != null) {
 			Account a = new Account(Constants.getAccountName(getInstance().mContext),Constants.getAccountType(getInstance().mContext));
-			getInstance();
 			ContentResolver.setSyncAutomatically(a, AUTHORITY, true);
-
-			getInstance();
 			ContentResolver.addPeriodicSync(a, AUTHORITY, new Bundle(), NotificationsConstants.DEF_SYNC_PERIOD * 60);
 		}
 	}
