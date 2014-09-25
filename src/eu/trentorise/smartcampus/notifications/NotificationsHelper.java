@@ -54,6 +54,7 @@ import eu.trentorise.smartcampus.storage.db.StorageConfiguration;
 import eu.trentorise.smartcampus.storage.sync.ISynchronizer;
 import eu.trentorise.smartcampus.storage.sync.SyncData;
 import eu.trentorise.smartcampus.storage.sync.SyncUpdateModel;
+import eu.trentorise.smartcampus.storage.sync.Utils;
 
 public class NotificationsHelper {
 
@@ -149,6 +150,13 @@ public class NotificationsHelper {
 		return getInstance().storage.synchronize(getInstance().synchronizer);
 	}
 	
+	public static SyncData synchronizeBefore(long timestamp) throws StorageConfigurationException, DataException, SecurityException, ConnectionException, ProtocolException {
+		long lastObjectSyncTime = Utils.getLastObjectSyncTime(getInstance().mContext, APP_TOKEN, SYNC_DB_NAME);
+		if (lastObjectSyncTime <= timestamp){
+			return getInstance().storage.synchronize(getInstance().synchronizer);
+		}
+		return null;
+	}
 	
 	public static void synchronizeInBG() throws NameNotFoundException, DataException {
 		Account a = new Account(Constants.getAccountName(getInstance().mContext),Constants.getAccountType(getInstance().mContext));
